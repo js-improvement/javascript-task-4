@@ -75,7 +75,7 @@ var bestFriends = lego.query(
 
     // Отсортируем их по возрасту (но зачем?)
     lego.sortBy('age', 'asc'), // Бывает только asc (от меньшего к большему) или desc (наоборот)
-
+    lego.sortBy('favoriteFruit', 'desc'),
     // А пол выведем только первой буквой для удобства
     lego.format('gender', function (value) {
         return value[0];
