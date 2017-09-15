@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * Сделано задание на звездочку
  * Реализованы методы or и and
@@ -19,8 +20,16 @@ exports.isStar = true;
  * @params {...Function} – Функции для запроса
  * @returns {Array}
  */
-exports.query = function (collection, ...rest) {
-    parametr = canonParametr(rest);
+
+exports.query = function (collection) {
+    var p = [];
+    p.formq = [];
+    p.sortq = [];
+    p.filterq = [];
+    p.limitq = [];
+    p.select = [];
+    var rest = arguments;
+    parametr = canonParametr(rest, p);
     var b = collection;
     b = b.filter(checkPerson);
     b = b.sort(sortPerson);
@@ -32,32 +41,29 @@ exports.query = function (collection, ...rest) {
 };
 
 
-function canonParametr(rest){
-    var p = [];
-    p['formq'] = [];
-    p['sortq'] = [];
-    p['filterq'] = [];
-    p['limitq'] = [];
-    p['select'] = [];
-    for (var i = 0; i<rest.length; i++){
-        if (rest[i] === undefined){
+function canonParametr(rest, p) {
+
+    for (var i = 1; i < rest.length; i++) {
+        if (rest[i] === undefined) {
             continue;
-        };
+        }
         var key = Object.keys(rest[i]);
         var key2 = Object.keys(rest[i][key[0]]);
-        if (key2.length == 0){
-            p[key[0]]= rest[i][key[0]] ;
+        if (key2.length === 0) {
+            p[key[0]] = rest[i][key[0]];
             continue;
         }
-        for (var j=0 ; j<key2.length; j++){
-            p[key[0]][key2[j]] = rest[i][key[0]][key2[j]]
+        for (var j = 0; j < key2.length; j++) {
+            p[key[0]][key2[j]] = rest[i][key[0]][key2[j]];
         }
     }
+
     return p;
 }
 
 /**
- * Функция преобразования атрибутов у объекта Person к зааданному в глобальной переменной parametr.formq формате
+ * Функция преобразования атрибутов у объекта Person к зааданному в
+ * глобальной переменной parametr.formq формате
  * @param {Array}person
  * @returns {Array}person модификации
  */
@@ -65,8 +71,9 @@ function formPerson(person) {
 
     var key = Object.keys(parametr.formq); // получаем список полей, которые надо модифицировать
     for (var i = 0; i < key.length; i++) { // проходим по списку
-        if (person[key] !== undefined) {  // Если функция модификаци определена
-            person[key] = parametr.formq[key](person[key]); // применяем ее к соответсвующему полю Person
+        if (person[key] !== undefined) { // Если функция модификаци определена
+            person[key] = parametr.formq[key](person[key]);
+            // применяем ее к соответсвующему полю Person
         }
     }
 
@@ -79,16 +86,17 @@ function formPerson(person) {
  * @returns {Array}newCollect Справочник обрезанный до лимита
  */
 function limitq(collection) {
-    if (typeof (parametr.limitq) !== 'number' ) {
+    if (typeof (parametr.limitq) !== 'number') {
         return collection; // Если лимит не задан, то возвращаем справочник целиком
     }
 
     if (parametr.limitq >= collection.length) {
-        return collection; // лимит больше текущего размера справочника, то возвращаем справочник целиком
+        return collection;
+        // лимит больше текущего размера справочника, то возвращаем справочник целиком
     }
     var newCollect = [];
     for (var i = 0; i < parametr.limitq; i++) {
-        newCollect[i] = collection[i];  // копируем поэлементно в новый справочник записи до лимита
+        newCollect[i] = collection[i]; // копируем поэлементно в новый справочник записи до лимита
     }
 
     return newCollect;
@@ -96,19 +104,22 @@ function limitq(collection) {
 
 /**
  * функция удаляет из справочника поля, которые не запрошены для вывода
- * @param {Array)collection Справочник
- * @returns {Array}newCollect новый справочник, в котором присутствуют только заданные в parametr.select поля
+ * @param {Array} collection Справочник
+ * @returns {Array} newCollect новый справочник,
+ * в котором присутствуют только заданные в parametr.select поля
  */
 function deleteProperty(collection) {
     var newCollect = [];
-    if (parametr.select.length<1){
-        return collection;   // Проверяем, заданны ли поля для вывода, если нет, то возвращаем справочник
+    if (parametr.select.length < 1) {
+        return collection;
+        // Проверяем, заданны ли поля для вывода, если нет, то возвращаем справочник
     }
     for (var i = 0; i < collection.length; i++) { // для каждого элемента справочника
         var newPerson = {};
         var oldPerson = collection[i];
         for (var j = 0; j < parametr.select.length; j++) {
-            newPerson[parametr.select[j]] = oldPerson[parametr.select[j]]; // Копируем запрошенные поля в новый справочник
+            newPerson[parametr.select[j]] = oldPerson[parametr.select[j]];
+            // Копируем запрошенные поля в новый справочник
         }
         newCollect[i] = newPerson;
     }
@@ -119,30 +130,34 @@ function deleteProperty(collection) {
 /**
  * Функция проверки соответсвия Персоны из справочника запрошенным фильтрам.
  * @param {Array}person - Персона
- * @param a - не используется
- * @param b - не используется
+ * @param {Numbet} a - не используется
+ * @param {Number} b - не используется
  * @param {Array}param  Массив параметров фильстрации
  * @returns {Boolean}findOne Соответсвует ли Персон условиям фильтра или нет
  */
-function checkPerson(person, a , b, param) {
-    if (param === undefined){
-        param = parametr;  // Если параметр Param  не задан, то смотрим фильтры в глобальной переменной.
+function checkPerson(person, a, b, param) {
+    if (param === undefined) {
+        param = parametr;
+        // Если параметр Param  не задан, то смотрим фильтры в глобальной переменной.
         // Используется при вызове из filter
     }
-    var key = Object.keys(param['filterq']); // получаем массив полей фильтрации уровня
+    var key = Object.keys(param.filterq); // получаем массив полей фильтрации уровня
     var findOne;
-    for (var i = 0; i < key.length; i++) {  //Перебираем все поля фильтрации на этом уровне
+    for (var i = 0; i < key.length; i++) { // Перебираем все поля фильтрации на этом уровне
         findOne = false;
-        if (key[i]== 'or'){
-            // Если поле для фильтрации OR, то Запускаем функцию обработки условия ИЛИ ( переходим на следующий уровень)
-            // checkPersonOr() рекурсивно вызывает checkPerson() Для проверки условий следующего уровня
-            findOne = checkPersonOr(person, param['filterq'][key[i]]);
-        }  else {
+        if (key[i] === 'or') {
+            // Если поле для фильтрации OR, то Запускаем
+            // функцию обработки условия ИЛИ ( переходим на следующий уровень)
+            // checkPersonOr() рекурсивно вызывает
+            // checkPerson() Для проверки условий следующего уровня
+            findOne = checkPersonOr(person, param.filterq[key[i]]);
+        } else {
             // Иначе запускаем функцию проверки соответсвия Персоны указанным параметрам
             findOne = checkPersonParametr(person, param.filterq[key[i]], key[i]);
         }
         if (findOne !== true) {
-            // Если проверка поля вернуля False, то завершаем обработку Персон . ( Выполнение условия И)
+            // Если проверка поля вернуля False,
+            // то завершаем обработку Персон . ( Выполнение условия И)
             return false;
         }
     }
@@ -151,35 +166,40 @@ function checkPerson(person, a , b, param) {
 }
 
 /**
- * Обработка условия ИЛИ. Рекурсивно вызывает checkPerson с новым контекстом param для каждого условия входящего в оператор ИЛИ
+ * Обработка условия ИЛИ. Рекурсивно вызывает checkPerson
+ * с новым контекстом param для каждого условия входящего в оператор ИЛИ
  * @param {Array}person
  * @param {Array}param Параметры фильтрации на данном уровне вложенности
  * @returns {boolean} Резуультат обработки условия ИЛИ
  */
-function checkPersonOr(person, param){
+function checkPersonOr(person, param) {
     var findOne = false;
-    for (var i = 0; i < param.length; i++) { // Перебераем все параметры из param  и для каждого запускаем checkPerson
+    for (var i = 0; i < param.length; i++) {
+        // Перебераем все параметры из param  и для каждого запускаем checkPerson
         findOne = checkPerson(person, null, null, param[i]);
         if (findOne === true) {
-            return true;  // Если Персона соответсвует хоть одному условию, то возвращаем TRUE. Условие ИЛИ
+            return true;
+            // Если Персона соответсвует хоть одному условию, то возвращаем TRUE. Условие ИЛИ
         }
     }
-    return findOne
+
+    return findOne;
 }
 
 /**
  * Проверка соответсвия Персоны параметрам
  * @param {Array}person
  * @param {Array}key искомые значения
- * @param {string]p Ключ для сравнения
+ * @param {string} p Ключ для сравнения
  * @returns {boolean}
  */
 function checkPersonParametr(person, key, p) {
     var findOne = false;
-    for (var j = 0; j < key.length; j++) { //Перебираем все искомые значения
+    for (var j = 0; j < key.length; j++) { // Перебираем все искомые значения
         var value = key[j];
         if (person[p] === value) {
-            findOne = true; // Если значение найдено у Персоны в требуемом свойстве, то возвращаем true
+            findOne = true;
+            // Если значение найдено у Персоны в требуемом свойстве, то возвращаем true
             break;
         }
     }
@@ -190,8 +210,8 @@ function checkPersonParametr(person, key, p) {
 
 /**
  * Сравнение двух персон по указанным в parametr.sortq полям и порядку сортировки
- * @param pers1
- * @param pers2
+ * @param {Array} pers1
+ * @param {Array} pers2
  * @returns {number} результат 1 если pers1 больше, -1 - меньше. 0 - равны
  */
 function sortPerson(pers1, pers2) {
@@ -209,10 +229,10 @@ function sortPerson(pers1, pers2) {
 
 /**
  * Функция сопоставление
- * @param fArg Первое значение
- * @param sArg Второе значение
- * @param asc Порядок сортировки 1 если asc , -1 если desc
- * @returns {*}
+ * @param {String}fArg Первое значение
+ * @param {String}sArg Второе значение
+ * @param {Number} asc Порядок сортировки 1 если asc , -1 если desc
+ * @returns {Boolean}
  */
 function compere(fArg, sArg, asc) {
     if (fArg === sArg) {
@@ -227,8 +247,8 @@ function compere(fArg, sArg, asc) {
 }
 
 /**
- * Выбор полей
- * @params {...String}
+ * Получение списка полей для вывода
+ * @returns {Array}
  */
 exports.select = function () {
 
@@ -246,11 +266,13 @@ exports.select = function () {
  * Фильтрация поля по массиву значений
  * @param {String} property – Свойство для фильтрации
  * @param {Array} values – Доступные значения
+ * @returns {Array}
  */
 exports.filterIn = function (property, values) {
     var res = [];
-    res['filterq'] =[];
-    res['filterq'][property] = values;
+    res.filterq = [];
+    res.filterq[property] = values;
+
     return res;
 };
 
@@ -258,6 +280,7 @@ exports.filterIn = function (property, values) {
  * Сортировка коллекции по полю
  * @param {String} property – Свойство для фильтрации
  * @param {String} order – Порядок сортировки (asc - по возрастанию; desc – по убыванию)
+ * @returns {Array}
  */
 exports.sortBy = function (property, order) {
     var asc = 0;
@@ -277,6 +300,7 @@ exports.sortBy = function (property, order) {
  * Форматирование поля
  * @param {String} property – Свойство для фильтрации
  * @param {Function} formatter – Функция для форматирования
+ * @returns {Array}
  */
 exports.format = function (property, formatter) {
     var res = [];
@@ -289,6 +313,7 @@ exports.format = function (property, formatter) {
 /**
  * Ограничение количества элементов в коллекции
  * @param {Number} count – Максимальное количество элементов
+ * @returns {Array}
  */
 exports.limit = function (count) {
     var res = [];
@@ -303,14 +328,16 @@ if (exports.isStar) {
      * Фильтрация, объединяющая фильтрующие функции
      * @star
      * @params {...Function} – Фильтрующие функции
+     * @returns {Array}
      */
-    exports.or = function (...rest) {
+    exports.or = function () {
+        var rest = arguments;
         var res = [];
-        res['filterq'] =[];
-        res['filterq']['or'] = [];
-        for (var i = 0; i<rest.length; i++){
+        res.filterq = [];
+        res.filterq.or = [];
+        for (var i = 0; i < rest.length; i++) {
             var key = rest[i];
-            res['filterq']['or'][i] = key;
+            res.filterq.or[i] = key;
         }
 
         return res;
@@ -321,17 +348,20 @@ if (exports.isStar) {
      * Фильтрация, пересекающая фильтрующие функции
      * @star
      * @params {...Function} – Фильтрующие функции
+     * @returns {Array}
      */
-    exports.and = function (...rest) {
+    exports.and = function () {
+        var rest = arguments;
         var res = [];
-        res['filterq']=[]
-        for (var i=0; i<rest.length; i++){
-            var key = Object.keys(rest[i]['filterq']);
-            for (var j=0; j<key.length; j++){
-                res['filterq'][key[j]] = rest[i]['filterq'][key[j]];
+        res.filterq = [];
+        for (var i = 0; i < rest.length; i++) {
+            var key = Object.keys(rest[i].filterq);
+            for (var j = 0; j < key.length; j++) {
+                res.filterq[key[j]] = rest[i].filterq[key[j]];
             }
 
         }
+
         return res;
     };
 }
